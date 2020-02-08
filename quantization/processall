@@ -1,0 +1,60 @@
+#! /bin/bash
+
+perl quantization.pl ../weights_data/conv_0_weight.txt conv_0_weight.txt
+perl quantization.pl ../weights_data/conv_0_bias.txt conv_0_bias.txt
+perl quantization.pl ../weights_data/conv_2_weight.txt conv_2_weight.txt
+perl quantization.pl ../weights_data/conv_2_bias.txt conv_2_bias.txt
+perl quantization.pl ../weights_data/lstm_weight_ih_l0.txt lstm_weight_ih_l0.txt
+perl quantization.pl ../weights_data/lstm_weight_hh_l0.txt lstm_weight_hh_l0.txt
+perl quantization.pl ../weights_data/lstm_bias_ih_l0.txt lstm_bias_ih_l0.txt
+perl quantization.pl ../weights_data/lstm_bias_hh_l0.txt lstm_bias_hh_l0.txt
+perl quantization.pl ../weights_data/fc_1_weight.txt fc_1_weight.txt
+perl quantization.pl ../weights_data/fc_1_bias.txt fc_1_bias.txt
+perl quantization.pl ../weights_data/fc_2_weight.txt fc_2_weight.txt
+perl quantization.pl ../weights_data/fc_2_bias.txt fc_2_bias.txt
+perl quantization.pl ../weights_data/fc_3_weight.txt fc_3_weight.txt
+perl quantization.pl ../weights_data/fc_3_bias.txt fc_3_bias.txt
+
+perl dequantization.pl conv_0_weight.txt dq_conv_0_weight.txt
+perl dequantization.pl conv_0_bias.txt dq_conv_0_bias.txt
+perl dequantization.pl conv_2_weight.txt dq_conv_2_weight.txt
+perl dequantization.pl conv_2_bias.txt dq_conv_2_bias.txt
+perl dequantization.pl lstm_weight_ih_l0.txt dq_lstm_weight_ih_l0.txt
+perl dequantization.pl lstm_weight_hh_l0.txt dq_lstm_weight_hh_l0.txt
+perl dequantization.pl lstm_bias_ih_l0.txt dq_lstm_bias_ih_l0.txt
+perl dequantization.pl lstm_bias_hh_l0.txt dq_lstm_bias_hh_l0.txt
+perl dequantization.pl fc_1_weight.txt dq_fc_1_weight.txt
+perl dequantization.pl fc_1_bias.txt dq_fc_1_bias.txt
+perl dequantization.pl fc_2_weight.txt dq_fc_2_weight.txt
+perl dequantization.pl fc_2_bias.txt dq_fc_2_bias.txt
+perl dequantization.pl fc_3_weight.txt dq_fc_3_weight.txt
+perl dequantization.pl fc_3_bias.txt dq_fc_3_bias.txt
+
+rm conv_0_weight.txt
+mv dq_conv_0_weight.txt conv_0_weight.txt
+rm conv_0_bias.txt
+mv dq_conv_0_bias.txt conv_0_bias.txt
+rm conv_2_weight.txt
+mv dq_conv_2_weight.txt conv_2_weight.txt
+rm conv_2_bias.txt
+mv dq_conv_2_bias.txt conv_2_bias.txt
+rm lstm_weight_ih_l0.txt
+mv dq_lstm_weight_ih_l0.txt lstm_weight_ih_l0.txt
+rm lstm_weight_hh_l0.txt
+mv dq_lstm_weight_hh_l0.txt lstm_weight_hh_l0.txt
+rm lstm_bias_ih_l0.txt
+mv dq_lstm_bias_ih_l0.txt lstm_bias_ih_l0.txt
+rm lstm_bias_hh_l0.txt
+mv dq_lstm_bias_hh_l0.txt lstm_bias_hh_l0.txt
+rm fc_1_weight.txt
+mv dq_fc_1_weight.txt fc_1_weight.txt
+rm fc_1_bias.txt
+mv dq_fc_1_bias.txt fc_1_bias.txt
+rm fc_2_weight.txt
+mv dq_fc_2_weight.txt fc_2_weight.txt
+rm fc_2_bias.txt
+mv dq_fc_2_bias.txt fc_2_bias.txt
+rm fc_3_weight.txt
+mv dq_fc_3_weight.txt fc_3_weight.txt
+rm fc_3_bias.txt
+mv dq_fc_3_bias.txt fc_3_bias.txt
