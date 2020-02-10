@@ -16,17 +16,20 @@ class Args(object):
         self.conv2_out_channels = 8
 
         # LSTM layer params
-        self.num_memory_cts = 16
+        # self.num_memory_cts = 16
+        self.num_memory_cts = 60
         self.input_size = 5
         self.sequence_length = 5
         self.batch_size = 1
-        self.num_layers = 1
-        self.num_classes = 2
+        self.num_layers = 2
 
         # fc layer
-        self.fc_in_size = 80  # equals to 41*self.num_memory_cts
-        self.fc1_out_size = 64
-        self.fc2_out_size = 32
+        # self.fc_in_size = 80  # equals to 41*self.num_memory_cts
+        # self.fc1_out_size = 64
+        # self.fc2_out_size = 32
+        self.fc_in_size = 600
+        self.fc1_out_size = 256
+        self.fc2_out_size = 128
 
 
 args = Args()
@@ -35,7 +38,7 @@ torch.manual_seed(args.seed)
 
 
 class GenderClassifier(nn.Module):
-    def __init__(self):
+    def __init__(self, NUM_CLASSES):
         super(GenderClassifier, self).__init__()
         self.args = args
 
@@ -46,7 +49,8 @@ class GenderClassifier(nn.Module):
             nn.ReLU(),
             nn.Conv1d(in_channels=self.args.conv1_out_channels, out_channels=self.args.conv2_out_channels, kernel_size=2),
             nn.ReLU(),
-            nn.MaxPool1d(kernel_size=16)
+            # nn.MaxPool1d(kernel_size=16)
+            nn.MaxPool1d(kernel_size=8)
         )
 
         # self.lstm = nn.LSTM(input_size=self.args.conv2_out_channels, hidden_size=args.num_memory_cts, batch_first=True)
@@ -56,7 +60,7 @@ class GenderClassifier(nn.Module):
             nn.Flatten(start_dim=1, end_dim=-1),
             nn.Linear(in_features=self.args.fc_in_size, out_features=self.args.fc1_out_size),
             nn.Linear(in_features=self.args.fc1_out_size, out_features=self.args.fc2_out_size),
-            nn.Linear(in_features=self.args.fc2_out_size, out_features=self.args.num_classes),
+            nn.Linear(in_features=self.args.fc2_out_size, out_features=NUM_CLASSES),
             nn.Softmax(dim=1)
         )
 

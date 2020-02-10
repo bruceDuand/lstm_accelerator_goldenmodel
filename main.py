@@ -5,46 +5,41 @@ from torch.autograd import Variable
 import pickle
 from GenderClassifier import Args, GenderClassifier
 from preprocessings import get_datases, get_mfccs, save_to_pickle, load_from_pickle
+from constants import CLASSES
 
 
-feature_loading = 'load_from_pkl' # option: load_from_flac or load_from_pkl
+feature_loading = 'load_from_flac' # option: load_from_flac or load_from_pkl
 feature_store = True
 
 model_loading = 'load_from_pkl' # option: load_from_pkl or train
 
 
 if feature_loading == 'load_from_flac':
-    (x_train, y_train), (x_test, y_test), (x_valid, y_valid) = get_datases()
+    (x_train, y_train), (x_test, y_test) = get_datases(class_type='speaker')
 
     x_train_mfccs = get_mfccs(x_train)
     x_test_mfccs = get_mfccs(x_test)
-    x_valid_mfccs = get_mfccs(x_valid)
 
     if feature_store:
         save_to_pickle(x_train_mfccs, "X-train-mfccs.pkl")
         save_to_pickle(x_test_mfccs, "X-test-mfccs.pkl")
-        save_to_pickle(x_valid_mfccs, "X-valid-mfccs.pkl")
         save_to_pickle(y_train, "y-train.pkl")
         save_to_pickle(y_test, "y-test.pkl")
-        save_to_pickle(y_valid, "y-valid.pkl")
 
 else:
     x_train_mfccs = get_mfccs(pickle_file="X-train-mfccs.pkl")
     x_test_mfccs = get_mfccs(pickle_file="X-test-mfccs.pkl")
-    x_valid_mfccs = get_mfccs(pickle_file="X-valid-mfccs.pkl")
     y_train = load_from_pickle(filename="y-train.pkl")
     y_test = load_from_pickle(filename="y-test.pkl")
-    y_valid = load_from_pickle(filename="y-valid.pkl")
 
 x_train_tensor = Variable(torch.Tensor(x_train_mfccs), requires_grad=False)
 x_test_tensor = Variable(torch.Tensor(x_test_mfccs), requires_grad=False)
-x_valid_tensor = Variable(torch.Tensor(x_valid_mfccs), requires_grad=False)
 y_train_tensor = Variable(torch.LongTensor(y_train), requires_grad=False)
 y_test_tensor = Variable(torch.LongTensor(y_test), requires_grad=False)
 
-lstm_model = GenderClassifier()
+lstm_model = GenderClassifier(len(np.bincount(y_train)))
 # optimizer = torch.optim.SGD(lstm_model.parameters(), lr=1e-4, weight_decay=1e-6, momentum=0.9, nesterov=True)
-optimizer = torch.optim.Adam(lstm_model.parameters(), lr=1e-4, weight_decay=1e-6)
+optimizer = torch.optim.Adam(lstm_model.parameters(), lr=1e-3, weight_decay=1e-3)
 loss_function = nn.CrossEntropyLoss()
 
 
@@ -62,7 +57,7 @@ def get_batch_data(batch_size):
 # x_train, y_train = get_batch_data(16)
 # print(x_train.size())
 
-for cur_iter in range(200):
+for cur_iter in range(500):
     print("iter: {:2d}".format(cur_iter), end=", ")
     # lstm_model.zero_grad()
     # x_batch, y_batch = get_batch_data(256)
@@ -88,6 +83,7 @@ print("@@@ Test data accuracy: {}".format(accuracy))
 # print(lstm_model.state_dict())
 
 torch.save(lstm_model.state_dict(), 'model_state_dict.pkl')
+print("# CLASSES: {}".format(len(np.bincount(y_train))))
 
 # model = lstm_model()
 # model.load_state_dict(torch.load('model_state_dict.pkl'))

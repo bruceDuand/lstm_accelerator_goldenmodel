@@ -1,7 +1,5 @@
-import torch
-import torch.nn as nn
-
 import numpy as np
+from preprocessings import load_from_pickle
 
-conv1_weights   = np.loadtxt("weights_data/conv_0_weights.txt")
-print(conv1_weights.shape)
+y_test = load_from_pickle(filename="y-test.pkl")
+print(np.bincount(y_test))

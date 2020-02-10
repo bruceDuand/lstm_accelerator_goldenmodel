@@ -8,7 +8,7 @@ import random
 
 from constants import DATA_DIR, DATASET_STR, SPEAKER_FILE, \
     CHAPTER_IDX, SPEAKER_IDX, FILENAME_IDX, GENDER_CLASSES, DURATION, \
-    NUM_MFCC, NUM_FRAMES, PICKLE_FILE_PREFIX, PROJECT_ROOT
+    NUM_MFCC, NUM_FRAMES, PICKLE_FILE_PREFIX, PROJECT_ROOT, CLASSES, MAX_CLASSES
 
 
 def init_reader_gender_map():
@@ -19,9 +19,9 @@ def init_reader_gender_map():
         for line in content:
             if DATASET_STR in line:
                 temp = line.split('|')
-                reader_id = temp[0].strip()
+                speaker_id = temp[0].strip()
                 reader_gender = temp[1].strip()
-                reader_gender_map[reader_id] = reader_gender
+                reader_gender_map[speaker_id] = reader_gender
     return reader_gender_map
 
 
@@ -29,28 +29,49 @@ def init_reader_gender_map():
 # print(len(reader_gender_map.keys()))
 
 
-def get_data():
-    rg_map = init_reader_gender_map()
+def get_data(class_type):
+    rg_map = {}
+    if class_type == 'speaker_id':
+        rg_map = init_reader_gender_map()
     file_list = glob.glob(DATA_DIR+'*/*/*.flac')
-    # print("Loading {:d} files from: {:s}".format(len(file_list), DATA_DIR))
+    print("Loading {:d} files from: {:s}".format(len(file_list), DATA_DIR))
     all_data = []
     for f in file_list:
         fsplit = f.split('/')
-        reader_id = fsplit[SPEAKER_IDX]
+        speaker_id = fsplit[SPEAKER_IDX]
         # chapter_id = fsplit[CHAPTER_IDX]
         # filename = fsplit[FILENAME_IDX]
 
         all_data.append({
-            'reader_id': reader_id,
+            'speaker_id': speaker_id,
             'filename': f
         })
-    random.shuffle(all_data)
 
+    random.shuffle(all_data)
+    print("dataset size: {}".format(len(all_data)))
+    
     X = []
     y = []
+    TEMP_CLASS_IDNEX = []
     for pair in all_data:
-        X.append(pair['filename'])
-        y.append(GENDER_CLASSES.index(rg_map[pair['reader_id']]))
+        if class_type == 'speaker':
+            if len(CLASSES) > 0:
+                if pair['speaker_id'] in CLASSES:
+                    X.append(pair['filename'])
+                    y.append(CLASSES.index(pair['speaker_id']))
+            else:
+                if len(TEMP_CLASS_IDNEX) >= MAX_CLASSES and pair['speaker_id'] not in TEMP_CLASS_IDNEX:
+                    continue
+
+                X.append(pair['filename'])
+                if pair['speaker_id'] in TEMP_CLASS_IDNEX:
+                    y.append(TEMP_CLASS_IDNEX.index(pair['speaker_id']))
+                else:
+                    TEMP_CLASS_IDNEX.append(pair['speaker_id'])
+                    y.append(TEMP_CLASS_IDNEX.index(pair['speaker_id']))
+        else:
+            X.append(pair['filename'])
+            y.append(GENDER_CLASSES.index(rg_map[pair['speaker_id']]))
 
     return X, y
 
@@ -102,20 +123,17 @@ def get_mfccs(file_list=False, pickle_file=False):
         return x_audio
 
 
-def get_datases():
-    rg_map = init_reader_gender_map()
-    x, y = get_data()
-    split_tupe_x = np.split(np.array(x), [int(0.7*len(x)), int(0.9*len(x))])
+def get_datases(class_type):
+    x, y = get_data(class_type)
+    split_tupe_x = np.split(np.array(x), [int(0.8*len(x))])
     x_train = split_tupe_x[0].tolist()
     x_test = split_tupe_x[1].tolist()
-    x_valid = split_tupe_x[2].tolist()
 
-    split_tupe_y = np.split(np.array(y), [int(0.7 * len(y)), int(0.9 * len(y))])
+    split_tupe_y = np.split(np.array(y), [int(0.8 * len(y))])
     y_train = split_tupe_y[0].tolist()
     y_test = split_tupe_y[1].tolist()
-    y_valid = split_tupe_y[2].tolist()
 
-    return (x_train, y_train), (x_test, y_test), (x_valid, y_valid)
+    return (x_train, y_train), (x_test, y_test)
 
 
 def save_to_pickle(data, filename):
@@ -134,7 +152,7 @@ def load_from_pickle(filename):
     infile.close()
     return data
 
+# (x_train, y_train), (x_test, y_test) = get_datases()
+# print(len(x_train))
+# print(len(y_train))
 
-# (x_train, y_train), (x_test, y_test), (x_valid, y_valid) = get_datases()
-# print(len(x_valid))
-# print(len(y_valid))

@@ -44,6 +44,11 @@ args = Args()
 #=======================================================
 # Load Data
 #=======================================================
+x_train_mfccs   = get_mfccs(pickle_file="X-train-mfccs.pkl")
+y_train         = load_from_pickle(filename="y-train.pkl")
+x_train_tensor  = Variable(torch.Tensor(x_train_mfccs), requires_grad=False)
+y_train_tensor  = Variable(torch.LongTensor(y_train), requires_grad=False)
+
 x_valid_mfccs   = get_mfccs(pickle_file="X-valid-mfccs.pkl")
 y_valid         = load_from_pickle(filename="y-valid.pkl")
 x_valid_tensor  = Variable(torch.Tensor(x_valid_mfccs), requires_grad=False)
@@ -68,7 +73,7 @@ print("------------- Test Accuracy -------------")
 outputs = model(x_data_tensor)
 _, outputs_label = outputs.max(dim=1)
 accuracy = int(sum(outputs_label == y_data_tensor))/len(y_data_tensor)
-print("data size: {}, accuracy: {:.5f}%".format(len(y_data_tensor), 100*accuracy))
+print("data size: {}, accuracy: {:.3f}%".format(len(y_data_tensor), 100*accuracy))
 
 #=======================================================
 # Forward Calculation: before quantization
@@ -76,26 +81,24 @@ print("data size: {}, accuracy: {:.5f}%".format(len(y_data_tensor), 100*accuracy
 print("------------- Before Quantization -------------")
 
 # forwarding data
-def forward_data(x_data):
-    conv1out    = get_conv_out(conv1_weights, conv1_bias, x_data, 4)
-    conv2out    = get_conv_out(conv2_weights, conv2_bias, conv1out, 2)
-    pooledout   = get_pool_out(conv2out, kernel_size=16)
-    lstm_in     = np.transpose(pooledout, (0, 2, 1))
-    lstmout     = get_lstm_out(lstm_in, lstm_weight_ih, lstm_weight_hh, lstm_bias_ih, lstm_bias_hh, hidden_size=16)
-    fcin        = lstmout.reshape(lstmout.shape[0], -1)
-    fc1out      = get_fc_out(fcin, fc1_weight, fc1_bias)
-    fc2out      = get_fc_out(fc1out, fc2_weight, fc2_bias)
-    fc3out      = get_fc_out(fc2out, fc3_weight, fc3_bias)
+# def forward_data(x_data):
+conv1out    = get_conv_out(conv1_weights, conv1_bias, x_data, 4)
+conv2out    = get_conv_out(conv2_weights, conv2_bias, conv1out, 2)
+pooledout   = get_pool_out(conv2out, kernel_size=16)
+lstm_in     = np.transpose(pooledout, (0, 2, 1))
+lstmout     = get_lstm_out(lstm_in, lstm_weight_ih, lstm_weight_hh, lstm_bias_ih, lstm_bias_hh, hidden_size=16)
+fcin        = lstmout.reshape(lstmout.shape[0], -1)
+fc1out      = get_fc_out(fcin, fc1_weight, fc1_bias)
+fc2out      = get_fc_out(fc1out, fc2_weight, fc2_bias)
+fc3out      = get_fc_out(fc2out, fc3_weight, fc3_bias)
 
-    return fc3out
-
-fcout = forward_data(x_data)
+fcout = fc3out
 
 classres = np.zeros((fcout.shape[0]))
 for i in range(fcout.shape[0]):    
     classres[i] = np.argmax(softmax(fcout[i]))
 accuracy = int(sum(classres == y_data))/len(y_data)
-print("data size: {}, accuracy: {:.5f}%".format(len(y_data), 100*accuracy))
+print("data size: {}, accuracy: {:.3f}%".format(len(y_data), 100*accuracy))
 #=======================================================
 # Forward Calculation: after quantization
 #=======================================================
@@ -125,9 +128,20 @@ fc3_weight     = np.loadtxt(name_list[12])
 fc3_bias       = np.loadtxt(name_list[13])
 # fc3_bias       = np.zeros(2)
 
-fcout  = forward_data(x_data)
+conv1out    = get_conv_out(conv1_weights, conv1_bias, x_data, 4)
+conv2out    = get_conv_out(conv2_weights, conv2_bias, conv1out, 2)
+pooledout   = get_pool_out(conv2out, kernel_size=16)
+lstm_in     = np.transpose(pooledout, (0, 2, 1))
+lstmout     = get_lstm_out(lstm_in, lstm_weight_ih, lstm_weight_hh, lstm_bias_ih, lstm_bias_hh, hidden_size=16)
+fcin        = lstmout.reshape(lstmout.shape[0], -1)
+fc1out      = get_fc_out(fcin, fc1_weight, fc1_bias)
+fc2out      = get_fc_out(fc1out, fc2_weight, fc2_bias)
+fc3out      = get_fc_out(fc2out, fc3_weight, fc3_bias)
+
+fcout = fc3out
+
 classres = np.zeros((fcout.shape[0]))
 for i in range(fcout.shape[0]):    
     classres[i] = np.argmax(softmax(fcout[i]))
 accuracy = int(sum(classres == y_data))/len(y_data)
-print("data size: {}, accuracy: {:.5f}%".format(len(y_data), 100*accuracy))
+print("data size: {}, accuracy: {:.3f}%".format(len(y_data), 100*accuracy))
